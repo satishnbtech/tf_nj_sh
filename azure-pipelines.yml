@@ -22,23 +22,23 @@ steps:
   displayName: 'Install dependencies and build'
 
 - script: |
-    sshpass -p 'YourSecurePassword123!' ssh -o StrictHostKeyChecking=no azureuser@$(VM_PUBLIC_IP) "sudo rm -rf $APP_DIR && sudo mkdir -p $APP_DIR"
-    sshpass -p 'YourSecurePassword123!' scp -o StrictHostKeyChecking=no -r ./public/* azureuser@$(VM_PUBLIC_IP):$APP_DIR/
+    sshpass -p 'YourSecurePassword123!' ssh -o StrictHostKeyChecking=no azureuser@4.213.2.225 \
+      "sudo rm -rf $APP_DIR && sudo mkdir -p $APP_DIR"
+
+    sshpass -p 'YourSecurePassword123!' scp -o StrictHostKeyChecking=no -r ./public/* \
+      azureuser@4.213.2.225:$APP_DIR/
   displayName: 'Copy static files to VM'
 
 - script: |
-    sshpass -p 'YourSecurePassword123!' ssh -o StrictHostKeyChecking=no azureuser@$(VM_PUBLIC_IP) <<EOF
-    sudo tee /etc/nginx/sites-available/nodeapp > /dev/null <<NGINX
-    server {
+    sshpass -p 'YourSecurePassword123!' ssh -o StrictHostKeyChecking=no azureuser@4.213.2.225 \
+      "echo 'server {
         listen 80;
         server_name _;
         location / {
             root $APP_DIR;
             index index.html index.htm;
         }
-    }
-NGINX
-    sudo ln -sf /etc/nginx/sites-available/nodeapp /etc/nginx/sites-enabled/nodeapp
-    sudo nginx -t && sudo systemctl restart nginx
-EOF
+      }' | sudo tee /etc/nginx/sites-available/nodeapp > /dev/null && \
+      sudo ln -sf /etc/nginx/sites-available/nodeapp /etc/nginx/sites-enabled/nodeapp && \
+      sudo nginx -t && sudo systemctl restart nginx"
   displayName: 'Configure NGINX reverse proxy'
